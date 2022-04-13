@@ -298,7 +298,7 @@ public class Agents2 extends Object2{
 		};
 
 		if(timer == null) {
-			timer = new Timer(1000/180, listener);
+			timer = new Timer(1000/60, listener);
 			timer.start();
 		}
 		
