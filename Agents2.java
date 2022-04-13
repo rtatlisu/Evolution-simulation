@@ -181,6 +181,9 @@ public class Agents2 extends Object2{
 				if(agentsArr.get(x).fitness < 0) {
 					agentsArr.get(x).fitness=0;
 				}	
+				
+				//add time component to the fitness, the faster you reach the target, the better is
+				//your fitness
 				if(lifetime > storedLifetime/10) {
 					agentsArr.get(x).fitness = (int) Math.floor(agentsArr.get(x).fitness *
 							(Math.floor(lifetime*100/storedLifetime))/100);
@@ -200,48 +203,12 @@ public class Agents2 extends Object2{
 			agentsArr.get(x).fitness = agentsArr.get(x).storedFitness*2;
 		}
 		
-		//add time component to the fitness, the faster you reach the target, the better is
-		//your fitness
-		
 }
 
 	
 	
 	
 	public void createAgents(int x) {	
-		if(gen>1) {
-
-
-		/*	for(int i = 0; i < x; i++) {
-				if(agentsArr.get(i).elite) {
-					agentsArr= new ArrayList<Agents2>();
-					Agents2 a = new Agents2();
-					a.elite=true;
-					agentsArr.add(a);
-					agentsArr.get(0).genes = copyAgentsArr.get(i).genes;
-					x=populationSize-1;
-					break;
-					
-				}
-			}
-			*/
-			
-		
-		}
-		
-
-		
-	
-
-	//	if(agentsArr==null) {
-		/*if(agentsArr==null) {	
-				agentsArr= new ArrayList<Agents2>();
-		}
-			for(int i = 0; i < x; i++) {
-					Agents2 a = new Agents2();
-					agentsArr.add(a);
-			}
-		*/	
 		if(gen==1) {
 			agentsArr= new ArrayList<Agents2>();
 			for(int i = 0; i < populationSize; i++) {
@@ -254,8 +221,6 @@ public class Agents2 extends Object2{
 			
 			if(gen > 1) {
 				for(int i = 0; i < agentsArr.size(); i++) {
-				//	System.out.println( "loop "+copyAgentsArr.get(0).genes);
-			System.out.println(agentsArr.get(i).genes);
 					selection(agentsArr);
 		
 						if(!agentsArr.get(i).elite) {
@@ -269,9 +234,10 @@ public class Agents2 extends Object2{
 							}
 						}	
 						else {
-							System.out.println("Agent: " +(i)+" " +agentsArr.get(i).genes);
-							System.out.println(agentsArr.get(i).vel);
-						//	agentsArr.get(i).genes = copyAgentsArr.get(i).genes;
+							System.out.println("Time spend to reach target of the elite: " +
+						(storedLifetime - agentsArr.get(i).lifetimeFinished));
+							System.out.println(agentsArr.get(i).elite);
+						
 						}
 					
 
@@ -295,33 +261,25 @@ public class Agents2 extends Object2{
 				count=0;
 				
 			}	
-	//   }
 	}
 
 
 
 	public void move(Graphics2D g2d) {
 		g2d.setColor(new Color(255,255,255,150));
-
+		//initiate new generation
 		if(lifetime==0) {
 	
 			lifetime=storedLifetime;
 			gen++;
 			prev=0;
-			copyAgentsArr = new ArrayList<Agents2>(agentsArr);
-			
+			copyAgentsArr = new ArrayList<Agents2>(agentsArr);	
 			determineElite();
-			
-			
-			
-			//agentsArr.removeAll(agentsArr);
-			//agentsArr=null;
-
 			createAgents(populationSize);
-		//	System.out.println(agentsArr.size());
 			agentsPool.removeAll(agentsPool);
 			agentsPool=null;	
 		}
+		
 		if(lifetime>0) {
 			for(int agents=0; agents < agentsArr.size(); agents++) {
 					
@@ -374,7 +332,6 @@ public class Agents2 extends Object2{
 		
 
 			
-		//if(	collision(agents)) {
 			if(agentsArr.get(agents).collided) {
 			agentsArr.get(agents).dirX=0;
 			agentsArr.get(agents).dirY=0;
@@ -411,7 +368,6 @@ public class Agents2 extends Object2{
 	
 		return genesChild;
 	}
-	
 	
 	
 	
@@ -463,14 +419,17 @@ public class Agents2 extends Object2{
 							agentsArr.get(count).genes.set(i, x2 + agentsArr.get(count).genes.get(i));
 						}
 					}
+					
+					//mutates the speed
+					if(agentsArr.get(count).vel < 5) {
+						if((random.nextInt(20)+1) == 1) {
+							agentsArr.get(count).vel += 1 + (3 - 1) * random.nextDouble();
+						}	
+					}
 			}
 		}
-		//mutates the speed, i might alter it to uncap the speed limit to let them
-		//get faster and faster
-/*		if((random.nextInt(20)+1) == 1) {
-			agentsArr.get(count).vel = 1 + (3 - 1) * random.nextDouble();
-		}
-	*/	
+	
+		
 		count++;
 		
 	
@@ -496,7 +455,7 @@ public class Agents2 extends Object2{
 			agentsArr.get(x).finished=true;
 			agentsArr.get(x).collided=true;
 			agentsArr.get(x).lifetimeFinished=lifetime;
-		//	System.out.println(agentsArr.get(x).lifetimeFinished);
+		
 			if(agentsArr.get(x).collidedAngle==0) {
 				agentsArr.get(x).collidedAngle = agentsArr.get(x).genes.get(genes.size()-this.lifetime);
 			}
@@ -525,19 +484,23 @@ public class Agents2 extends Object2{
 		return agentsArr.get(x).collided;
 	}
 	
+	
+	
 	public void determineElite() {
-		for(int i = 0; i < agentsArr.size(); i++) {
-			if(agentsArr.get(i).finished) {
-				for(int j = i+1; j < agentsArr.size()-1; j++) {
-					if(agentsArr.get(i).lifetimeFinished >= agentsArr.get(j).
-							lifetimeFinished) {
-						agentsArr.get(i).elite=true;
-					}
-					else {
-						agentsArr.get(i).elite=false;
-						agentsArr.get(j).elite=true;
-						break;
-					}
+		for(int i = 0; i < agentsArr.size()-1; i++) {
+			for(int j = 0; j < agentsArr.size(); j++) {
+				if(agentsArr.get(i).lifetimeFinished > 0 || agentsArr.get(j).lifetimeFinished >0) {
+						if(agentsArr.get(i).lifetimeFinished >= agentsArr.get(j).
+								lifetimeFinished) {
+							agentsArr.get(i).elite=true;
+							agentsArr.get(j).elite=false;
+						}
+						else {
+							agentsArr.get(i).elite=false;
+							agentsArr.get(j).elite=true;
+							break;
+						}
+					
 				}
 			}
 			if(agentsArr.get(i).elite) {
@@ -547,8 +510,7 @@ public class Agents2 extends Object2{
 	}
 	
 	public ArrayList<Double> agentsHead(int x) {
-	//	 agentsArr.get(x).head = new ArrayList<Double>();
-	
+
 		if(agentsArr.get(x).dirX == 0 && agentsArr.get(x).dirY == 1) {
 			agentsArr.get(x).head.add(agentsArr.get(x).agentsX
 						+ ((agentsArr.get(x).dirY*-1) * agentsArr.get(x).agentsW));
