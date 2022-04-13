@@ -135,7 +135,7 @@ public class Agents2 extends Object2{
 		g2d.drawRect(GUI2.frame.getBounds().width/2 - agentsW/2-(33/2),
 				GUI2.frame.getBounds().height - 100, 33, 33);
 		textArea(g2d);	
-		colorizeAgent(g2d, 0);
+		colorizeEliteAgent(g2d);
 
 		
 		
@@ -208,21 +208,12 @@ public class Agents2 extends Object2{
 	
 	
 	
-	public void createAgents(int x) {
-		boolean elite=false;
-	
+	public void createAgents(int x) {	
 		if(gen>1) {
 
-			for(int i = 0; i < copyAgentsArr.size(); i++) {
-				if(copyAgentsArr.get(i).elite) {
-					elite=true;
-					break;
-				}
-		
-			}
 
-			for(int i = 0; i < x; i++) {
-				if(copyAgentsArr.get(i).elite) {
+		/*	for(int i = 0; i < x; i++) {
+				if(agentsArr.get(i).elite) {
 					agentsArr= new ArrayList<Agents2>();
 					Agents2 a = new Agents2();
 					a.elite=true;
@@ -230,8 +221,10 @@ public class Agents2 extends Object2{
 					agentsArr.get(0).genes = copyAgentsArr.get(i).genes;
 					x=populationSize-1;
 					break;
+					
 				}
 			}
+			*/
 			
 		
 		}
@@ -241,22 +234,29 @@ public class Agents2 extends Object2{
 	
 
 	//	if(agentsArr==null) {
-		if(agentsArr==null) {	
+		/*if(agentsArr==null) {	
 				agentsArr= new ArrayList<Agents2>();
 		}
 			for(int i = 0; i < x; i++) {
 					Agents2 a = new Agents2();
 					agentsArr.add(a);
 			}
-			
+		*/	
+		if(gen==1) {
+			agentsArr= new ArrayList<Agents2>();
+			for(int i = 0; i < populationSize; i++) {
+				Agents2 a = new Agents2();
+				agentsArr.add(a);
+			}
+		}
 	
 			
 			
 			if(gen > 1) {
 				for(int i = 0; i < agentsArr.size(); i++) {
 				//	System.out.println( "loop "+copyAgentsArr.get(0).genes);
-		//	System.out.println(copyAgentsArr.size());
-					selection(copyAgentsArr);
+			System.out.println(agentsArr.get(i).genes);
+					selection(agentsArr);
 		
 						if(!agentsArr.get(i).elite) {
 							agentsArr.get(i).genes = crossover(chooseTwo.get(0).genes,chooseTwo.get(1).genes);
@@ -270,23 +270,26 @@ public class Agents2 extends Object2{
 						}	
 						else {
 							System.out.println("Agent: " +(i)+" " +agentsArr.get(i).genes);
+							System.out.println(agentsArr.get(i).vel);
 						//	agentsArr.get(i).genes = copyAgentsArr.get(i).genes;
 						}
 					
-						
-					
-					
-				/*	if(chooseTwo.get(0).fitness >= chooseTwo.get(0).fitness) {
-						agentsArr.get(i).vel =chooseTwo.get(0).vel;
-					}
-					else {
-						agentsArr.get(i).vel =chooseTwo.get(1).vel;
-					}
-					*/
+
 					mutation(mutationRate);
-			//		agentsArr.get(i).vel = (chooseTwo.get(0).vel + chooseTwo.get(1).vel)/2;
 					
-	
+					//reset the agents attributes that are not relevant for evolution
+			//		finished=false;
+			//		elite=false;
+					agentsArr.get(i).lifetimeFinished=0;
+				//	vel = 1 + (3 - 1) * random.nextDouble();
+					agentsArr.get(i).collided=false;
+					agentsArr.get(i).collidedAngle=0;
+					agentsArr.get(i).fitness=0;
+					agentsArr.get(i).dirX=0;
+					agentsArr.get(i).dirY=-1;
+					agentsArr.get(i).agentsX=GUI2.frame.getBounds().width/2 - agentsW/2;	
+					agentsArr.get(i).agentsY=GUI2.frame.getBounds().height - 100;
+		
 				}
 				System.out.println();
 				count=0;
@@ -301,9 +304,7 @@ public class Agents2 extends Object2{
 		g2d.setColor(new Color(255,255,255,150));
 
 		if(lifetime==0) {
-			for(int i = 0; i < populationSize; i++) {
-				System.out.println(agentsArr.get(i).finished);
-			}
+	
 			lifetime=storedLifetime;
 			gen++;
 			prev=0;
@@ -313,8 +314,8 @@ public class Agents2 extends Object2{
 			
 			
 			
-			agentsArr.removeAll(agentsArr);
-			agentsArr=null;
+			//agentsArr.removeAll(agentsArr);
+			//agentsArr=null;
 
 			createAgents(populationSize);
 		//	System.out.println(agentsArr.size());
@@ -455,7 +456,7 @@ public class Agents2 extends Object2{
 			//flickering movement from happening  after many generations
 			if(!agentsArr.get(count).elite) {
 				int x =  (random.nextInt( 100 )+1); 
-				int x2 =(int) ((random.nextInt(360+359)-359)*magnitude);
+				int x2 =(int) ((random.nextInt(360+359)-359)*(magnitude*3));
 					if(x >= 1 && x <= d*100) {
 						//mutation	
 						for(int i = 0; i < genes.size(); i++) {
@@ -595,23 +596,28 @@ public class Agents2 extends Object2{
 		return agentsArr.get(x).head;
 	}
 	
-	public void colorizeAgent(Graphics2D g2d, int agent) {
+	public void colorizeEliteAgent(Graphics2D g2d) {
 		g2d.setColor(Color.red);
-		rect = new Rectangle2D.Double(agentsArr.get(agent).agentsX, agentsArr.get(agent).agentsY
-				, agentsArr.get(agent).agentsW, agentsArr.get(agent).agentsH);
-
-		if(agentsArr.get(agent).collided) {
-			g2d.rotate(Math.toRadians(agentsArr.get(agent).collidedAngle),
-					agentsArr.get(agent).agentsX,agentsArr.get(agent).agentsY);
-		}
-		else {
-			if(lifetime > 0) {
-			g2d.rotate(Math.toRadians(agentsArr.get(agent).genes.get(genes.size()-lifetime)),
-					agentsArr.get(agent).agentsX,agentsArr.get(agent).agentsY);
+		for(int agent = 0; agent < populationSize; agent++) {
+			if(agentsArr.get(agent).elite) {
+				rect = new Rectangle2D.Double(agentsArr.get(agent).agentsX, agentsArr.get(agent).agentsY
+						, agentsArr.get(agent).agentsW, agentsArr.get(agent).agentsH);
+		
+				if(agentsArr.get(agent).collided) {
+					g2d.rotate(Math.toRadians(agentsArr.get(agent).collidedAngle),
+							agentsArr.get(agent).agentsX,agentsArr.get(agent).agentsY);
+				}
+				else {
+					if(lifetime > 0) {
+					g2d.rotate(Math.toRadians(agentsArr.get(agent).genes.get(genes.size()-lifetime)),
+							agentsArr.get(agent).agentsX,agentsArr.get(agent).agentsY);
+					}
+				}
+					g2d.fill(rect);
+					g2d.draw(rect);
+					break;
 			}
 		}
-			g2d.fill(rect);
-			g2d.draw(rect);
 	}
 
 
